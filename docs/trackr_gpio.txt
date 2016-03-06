@@ -1,0 +1,12 @@
+
+
+GPIO mapping for TrackR device
+
+function        GPIO
+----------      -----
+Buzzer (R)      P0.10
+Buzzer (L)      P0.23
+Button switch   P0.17
+LED             P0.19
+
+

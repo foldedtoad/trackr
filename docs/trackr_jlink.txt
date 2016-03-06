@@ -1,0 +1,50 @@
+
+knots:~ robin$ JLinkExe -if SWD -device nrf51822_xxab -speed 1000
+SEGGER J-Link Commander V5.10f (Compiled Dec 22 2015 14:25:20)
+DLL version V5.10f, compiled Dec 22 2015 14:25:14
+
+Connecting to J-Link via USB...O.K.
+Firmware: J-Link ARM Lite V8 compiled Oct 29 2014 09:03:16
+Hardware version: V8.00
+S/N: xxxxxxxxx
+License(s): GDB
+Emulator has Trace capability
+VTref = 2.957V
+
+
+Type "connect" to establish a target connection, '?' for help
+J-Link>connect
+Device "NRF51822_XXAB" selected.
+
+
+Found SWD-DP with ID 0x0BB11477
+Found Cortex-M0 r0p0, Little endian.
+FPUnit: 4 code (BP) slots and 0 literal slots
+CoreSight components:
+ROMTbl 0 @ F0000000
+ROMTbl 0 [0]: F00FF000, CID: B105100D, PID: 000BB471 ROM Table
+ROMTbl 1 @ E00FF000
+ROMTbl 1 [0]: FFF0F000, CID: B105E00D, PID: 000BB008 SCS
+ROMTbl 1 [1]: FFF02000, CID: B105E00D, PID: 000BB00A DWT
+ROMTbl 1 [2]: FFF03000, CID: B105E00D, PID: 000BB00B FPB
+ROMTbl 0 [1]: 00002000, CID: B105900D, PID: 000BB9A3 ???
+Cortex-M0 identified.
+J-Link>h
+PC = 000119CE, CycleCnt = 00000000
+R0 = 20000103, R1 = 00000032, R2 = E000E200, R3 = 00000032
+R4 = 00000000, R5 = 20002AB4, R6 = 00000000, R7 = 00000000
+R8 = FFFFFFFF, R9 = FFFFFFFF, R10= 0001CFF0, R11= 0001CFF0
+R12= FFFFFFFF
+SP(R13)= 20003AF0, MSP= 20003AF0, PSP= FFFFFFFC, R14(LR) = 0000116B
+XPSR = 61000000: APSR = nZCvq, EPSR = 01000000, IPSR = 000 (NoException)
+CFBP = 00000000, CONTROL = 00, FAULTMASK = 00, BASEPRI = 00, PRIMASK = 00
+J-Link>s
+000119CE:  40 BF              SEV
+J-Link>s
+000119D0:  20 BF              WFE
+J-Link>s
+000119D2:  41 78              LDRB    R1, [R0, #+0x01]
+J-Link>s
+000119D4:  03 78              LDRB    R3, [R0]
+J-Link>s
+000119D6:  43 70              STRB    R3, [R0, #+0x01]
