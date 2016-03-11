@@ -8,7 +8,7 @@ TARGET_BOARD   = trackr
 # Define relative paths to SDK components
 #------------------------------------------------------------------------------
 
-SDK_BASE      = ../../../..
+SDK_BASE      = ../../..
 COMPONENTS    = $(SDK_BASE)/components
 TEMPLATE_PATH = $(COMPONENTS)/toolchain/gcc
 
@@ -63,17 +63,16 @@ C_SOURCE_FILES += ../connect.c
 C_SOURCE_FILES += ../eddystone.c
 C_SOURCE_FILES += ../battery.c
 C_SOURCE_FILES += ../temperature.c
+C_SOURCE_FILES += ../trackr_bsp.c
 
 C_SOURCE_FILES += $(COMPONENTS)/libraries/button/app_button.c
-C_SOURCE_FILES += $(COMPONENTS)/libraries/util/app_error.c
+#C_SOURCE_FILES += $(COMPONENTS)/libraries/util/app_error.c
 C_SOURCE_FILES += $(COMPONENTS)/libraries/fifo/app_fifo.c
 C_SOURCE_FILES += $(COMPONENTS)/libraries/timer/app_timer.c
-C_SOURCE_FILES += $(COMPONENTS)/libraries/timer/app_timer_appsh.c
 C_SOURCE_FILES += $(COMPONENTS)/libraries/scheduler/app_scheduler.c
 C_SOURCE_FILES += $(COMPONENTS)/drivers_nrf/pstorage/pstorage.c
 C_SOURCE_FILES += $(COMPONENTS)/libraries/util/nrf_assert.c
 C_SOURCE_FILES += $(COMPONENTS)/drivers_nrf/hal/nrf_delay.c
-C_SOURCE_FILES += $(COMPONENTS)/drivers_nrf/common/nrf_drv_common.c
 C_SOURCE_FILES += $(COMPONENTS)/ble/common/ble_advdata.c
 C_SOURCE_FILES += $(COMPONENTS)/ble/common/ble_conn_params.c
 C_SOURCE_FILES += $(COMPONENTS)/ble/common/ble_srv_common.c
@@ -120,18 +119,8 @@ OUTPUT_BINARY_DIRECTORY = $(OBJECT_DIRECTORY)
 # Sorting removes duplicates
 BUILD_DIRECTORIES := $(sort $(OBJECT_DIRECTORY) $(OUTPUT_BINARY_DIRECTORY) $(LISTING_DIRECTORY) )
 
-ifeq ($(MAKECMDGOALS),debug)
-  BUILD_TYPE := debug
-endif
+DEBUG_FLAGS    += -D NDEBUG -O3
 
-ifeq ($(BUILD_TYPE),debug)
-  DEBUG_FLAGS += -D DEBUG -g -O0
-  CFLAGS += -Wa,-adhln
-else
-  BUILD_TYPE := release
-  DEBUG_FLAGS += -D NDEBUG -O3
-  DBGLOG_SUPPORT = "no"
-endif
 
 # flags common to all targets
 #CFLAGS += -save-temps
@@ -190,7 +179,6 @@ all: $(BUILD_DIRECTORIES) $(OBJECTS)
 
 	@echo "*****************************************************"
 	@echo "build project: $(OUTPUT_NAME)"
-	@echo "build type:    $(BUILD_TYPE)"
 	@echo "build with:    $(TOOLCHAIN_BASE)"
 	@echo "build target:  $(TARGET_BOARD)"
 	@echo "build SOC:     $(TARGET_SOC)"
@@ -210,13 +198,13 @@ $(BUILD_DIRECTORIES):
 
 # Create objects from C SRC files
 $(OBJECT_DIRECTORY)/%.o: %.c
-	@echo Compiling file: $(notdir $<)
+	@echo Compiling module: $(notdir $<)
 	$(NO_ECHO)$(CC) $(CFLAGS) $(INC_PATHS) \
 	-c $< -o $@ > $(OUTPUT_BINARY_DIRECTORY)/$*.lst
 
 # Assemble files
 $(OBJECT_DIRECTORY)/%.o: %.s
-	@echo Compiling file: $(notdir $<)
+	@echo Compiling module: $(notdir $<)
 	$(NO_ECHO)$(CC) $(ASMFLAGS) $(INC_PATHS) -c -o $@ $<
 
 # Link

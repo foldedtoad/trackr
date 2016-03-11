@@ -10,7 +10,6 @@
 #include "softdevice_handler.h"
 #include "ble_advdata.h"
 #include "app_timer.h"
-#include "app_timer_appsh.h"
 #include "app_scheduler.h"
 
 #include "config.h"
@@ -132,8 +131,6 @@ int main(void)
     eddystone_init();
     conn_params_init();
     sec_params_init();
-
-    device_manager_init();
 
     advertising_start_connectable();
 

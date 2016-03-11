@@ -6,6 +6,7 @@
 #include <string.h>
 #include <stdbool.h>
 
+#include "nrf51.h"
 #include "ble_gap.h"
 #include "nrf_error.h"
 

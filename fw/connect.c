@@ -12,8 +12,8 @@
 #include "ble_hci.h"
 #include "ble_conn_params.h"
 #include "softdevice_handler.h"
+#include "device_manager.h"
 #include "app_timer.h"
-#include "app_timer_appsh.h"
 #include "pstorage.h"
 
 #include "config.h"
@@ -28,110 +28,11 @@
 /* Connection handle */
 static uint16_t                  m_conn_handle = BLE_CONN_HANDLE_INVALID;
 
-/* Application identifier allocated by device manager. */
-static dm_application_instance_t m_app_handle;
-
 /* Security requirements for this application. */
 static ble_gap_sec_params_t      m_sec_params;              
 
 /* Flag to keep track of ongoing operations on persistent memory. */
 static bool                      m_memory_access_in_progress = false;
-
-/*---------------------------------------------------------------------------*/
-/*                                                                           */
-/*---------------------------------------------------------------------------*/
-static void app_context_load(dm_handle_t const * p_handle)
-{
-    uint32_t                 err_code;
-    static uint32_t          context_data;
-    dm_application_context_t context;
-
-    context.len    = sizeof(context_data);
-    context.p_data = (uint8_t *)&context_data;
-
-    err_code = dm_application_context_get(p_handle, &context);
-    if (err_code == NRF_SUCCESS) {
-
-        // Send Service Changed Indication if ATT table has changed.
-        if ((context_data & (DFU_APP_ATT_TABLE_CHANGED << DFU_APP_ATT_TABLE_POS)) != 0) {
-
-            err_code = sd_ble_gatts_service_changed(m_conn_handle, 
-                                                    APP_SERVICE_HANDLE_START, 
-                                                    BLE_HANDLE_MAX);
-            if ((err_code != NRF_SUCCESS) &&
-                (err_code != BLE_ERROR_INVALID_CONN_HANDLE) &&
-                (err_code != NRF_ERROR_INVALID_STATE) &&
-                (err_code != BLE_ERROR_NO_TX_BUFFERS) &&
-                (err_code != NRF_ERROR_BUSY) &&
-                (err_code != BLE_ERROR_GATTS_SYS_ATTR_MISSING)) {
-
-                APP_ERROR_HANDLER(err_code);
-            }
-        }
-
-        APP_ERROR_CHECK( dm_application_context_delete(p_handle) );
-    }
-    else if (err_code == DM_NO_APP_CONTEXT) {
-        // No context available. Ignore.
-    }
-    else {
-        APP_ERROR_HANDLER(err_code);
-    }
-}
-
-/*---------------------------------------------------------------------------*/
-/*                                                                           */
-/*---------------------------------------------------------------------------*/
-static uint32_t device_manager_evt_handler(dm_handle_t const * p_handle,
-                                           dm_event_t const  * p_event,
-                                           uint32_t            event_result)
-{
-    APP_ERROR_CHECK(event_result);
-
-    switch (p_event->event_id) {
-
-        case DM_EVT_LINK_SECURED:
-            app_context_load(p_handle);
-            break;
-
-        default:
-            // No implementation needed.
-            break;
-    }
-
-    return NRF_SUCCESS;
-}
-
-/*---------------------------------------------------------------------------*/
-/*                                                                           */
-/*---------------------------------------------------------------------------*/
-void device_manager_init(void)
-{
-    dm_init_param_t         init_data;
-    dm_application_param_t  register_param;
-
-    memset(&init_data, 0, sizeof(init_data));
-
-#if 0
-    // Clear all bonded centrals if the Bonds Delete button is pushed.
-    init_data.clear_persistent_data = (nrf_gpio_pin_read(TEMP_PAIR_BUTTON_PIN) == 0);
-#endif
-
-    APP_ERROR_CHECK( dm_init(&init_data) );
-
-    memset(&register_param.sec_param, 0, sizeof(ble_gap_sec_params_t));
-    
-    register_param.sec_param.bond         = SEC_PARAM_BOND;
-    register_param.sec_param.mitm         = SEC_PARAM_MITM;
-    register_param.sec_param.io_caps      = SEC_PARAM_IO_CAPABILITIES;
-    register_param.sec_param.oob          = SEC_PARAM_OOB;
-    register_param.sec_param.min_key_size = SEC_PARAM_MIN_KEY_SIZE;
-    register_param.sec_param.max_key_size = SEC_PARAM_MAX_KEY_SIZE;
-    register_param.evt_handler            = device_manager_evt_handler;
-    register_param.service_type           = DM_PROTOCOL_CNTXT_GATT_SRVR_ID;
-
-    APP_ERROR_CHECK( dm_register(&m_app_handle, &register_param) );
-}
 
 /*---------------------------------------------------------------------------*/
 /*                                                                           */
@@ -223,16 +124,6 @@ void storage_init(void)
 /*---------------------------------------------------------------------------*/
 static void on_ble_evt(ble_evt_t * p_ble_evt)
 {
-    uint32_t err_code;
-
-    static ble_gap_evt_auth_status_t m_auth_status;
-    static ble_gap_enc_key_t         m_enc_key;
-    static ble_gap_id_key_t          m_id_key;
-    static ble_gap_sign_info_t       m_sign_key;
-    static ble_gap_sec_keyset_t      m_keys = {
-            .keys_periph = {&m_enc_key, &m_id_key, &m_sign_key}
-    };
-
     switch (p_ble_evt->header.evt_id) {
 
         case BLE_GAP_EVT_CONNECTED:
@@ -248,68 +139,29 @@ static void on_ble_evt(ble_evt_t * p_ble_evt)
             advertising_start_connectable();
             break;
 
-        case BLE_GAP_EVT_SEC_PARAMS_REQUEST:
-            err_code = sd_ble_gap_sec_params_reply(m_conn_handle,
-                                                   BLE_GAP_SEC_STATUS_SUCCESS,
-                                                   &m_sec_params,
-                                                   &m_keys);
-            APP_ERROR_CHECK(err_code);
-            break;
-
-        case BLE_GATTS_EVT_SYS_ATTR_MISSING:
-            {
-                uint32_t flags = BLE_GATTS_SYS_ATTR_FLAG_SYS_SRVCS | 
-                                 BLE_GATTS_SYS_ATTR_FLAG_USR_SRVCS;
-
-                err_code = sd_ble_gatts_sys_attr_set(m_conn_handle, NULL, 0, flags);
-                APP_ERROR_CHECK(err_code);
-            }
-            break;
-
-        case BLE_GAP_EVT_AUTH_STATUS:
-            m_auth_status = p_ble_evt->evt.gap_evt.params.auth_status;
-            break;
-
         case BLE_GAP_EVT_SEC_INFO_REQUEST:
-          {
-            bool                    master_id_matches;
-            ble_gap_sec_kdist_t *   p_distributed_keys;
-            ble_gap_enc_info_t *    p_enc_info;
-            ble_gap_irk_t *         p_id_info;
-            ble_gap_sign_info_t *   p_sign_info;
-
-            master_id_matches  = memcmp(&p_ble_evt->evt.gap_evt.params.sec_info_request.master_id,
-                                        &m_enc_key.master_id,
-                                        sizeof(ble_gap_master_id_t)) == 0;
-
-            p_distributed_keys = &m_auth_status.kdist_periph;
-
-            p_enc_info  = (p_distributed_keys->enc  && master_id_matches) ? &m_enc_key.enc_info : NULL;
-            p_id_info   = (p_distributed_keys->id   && master_id_matches) ? &m_id_key.id_info   : NULL;
-            p_sign_info = (p_distributed_keys->sign && master_id_matches) ? &m_sign_key         : NULL;
-
-            err_code = sd_ble_gap_sec_info_reply(m_conn_handle,
-                                                 p_enc_info,
-                                                 p_id_info, p_sign_info);
-            APP_ERROR_CHECK(err_code);
             break;
-          }
 
         case BLE_GAP_EVT_TIMEOUT:
-            if (p_ble_evt->evt.gap_evt.params.timeout.src == BLE_GAP_TIMEOUT_SRC_ADVERTISING) {
+            if (p_ble_evt->evt.gap_evt.params.timeout.src == BLE_GAP_TIMEOUT_SRC_ADVERTISEMENT) {
 
                 /* Set to Non-Connect Advertising mode */
                 advertising_start_nonconnectable();
             }
             break;
 
-        case BLE_EVT_TX_COMPLETE:
-            break;
-
         default:
             /* No implementation needed. */
             break;
     }
+}
+
+/*---------------------------------------------------------------------------*/
+/*                                                                           */
+/*---------------------------------------------------------------------------*/
+void services_init(void)
+{    
+    // FIXME add init of Trackr service.
 }
 
 /*---------------------------------------------------------------------------*/

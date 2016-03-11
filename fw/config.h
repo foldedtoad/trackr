@@ -10,7 +10,7 @@
 
 #include "app_timer.h"
 #include "app_scheduler.h"
-#include "trackr_board.h"
+#include "trackr_bsp.h"
 
 /* 
  *  Include or not the service_changed characteristic. 
@@ -67,7 +67,7 @@
  *  Timer parameters
  */
 #define APP_TIMER_PRESCALER             0
-#define APP_TIMER_MAX_TIMERS            (4 + BSP_APP_TIMERS_NUMBER)
+#define APP_TIMER_MAX_TIMERS            4
 #define APP_TIMER_OP_QUEUE_SIZE         10
 
 /* 

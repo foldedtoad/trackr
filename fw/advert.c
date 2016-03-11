@@ -12,7 +12,6 @@
 #include "ble_advdata.h"
 #include "ble_gap.h"
 #include "app_timer.h"
-#include "app_timer_appsh.h"
 
 #include "config.h"
 #include "advert.h"
@@ -30,7 +29,6 @@ static const ble_gap_adv_params_t   m_adv_params_connectable = {
     .p_whitelist  = NULL,
     .interval     = APP_ADV_INTERVAL,
     .timeout      = APP_ADV_TIMEOUT,
-    .channel_mask = {0,0,0},
 };
 
 static const ble_gap_adv_params_t   m_adv_params_nonconnectable = {
@@ -40,7 +38,6 @@ static const ble_gap_adv_params_t   m_adv_params_nonconnectable = {
     .p_whitelist  = NULL,
     .interval     = APP_ADV_INTERVAL,
     .timeout      = 0,
-    .channel_mask = {0,0,0},
 };
 
 /*---------------------------------------------------------------------------*/
