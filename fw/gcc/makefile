@@ -67,7 +67,6 @@ C_SOURCE_FILES += ../temperature.c
 C_SOURCE_FILES += ../trackr_bsp.c
 
 C_SOURCE_FILES += $(COMPONENTS)/libraries/button/app_button.c
-#C_SOURCE_FILES += $(COMPONENTS)/libraries/util/app_error.c
 C_SOURCE_FILES += $(COMPONENTS)/libraries/fifo/app_fifo.c
 C_SOURCE_FILES += $(COMPONENTS)/libraries/timer/app_timer.c
 C_SOURCE_FILES += $(COMPONENTS)/libraries/scheduler/app_scheduler.c
@@ -117,11 +116,20 @@ OBJECT_DIRECTORY = _build
 LISTING_DIRECTORY = $(OBJECT_DIRECTORY)
 OUTPUT_BINARY_DIRECTORY = $(OBJECT_DIRECTORY)
 
+ifeq ($(MAKECMDGOALS),debug)
+  BUILD_TYPE := debug
+endif
+
+ifeq ($(BUILD_TYPE),debug)
+  DEBUG_FLAGS += -D DEBUG -g -O0
+  CFLAGS += -Wa,-adhln
+else
+  BUILD_TYPE := release
+  DEBUG_FLAGS += -D NDEBUG -O3
+endif
+
 # Sorting removes duplicates
 BUILD_DIRECTORIES := $(sort $(OBJECT_DIRECTORY) $(OUTPUT_BINARY_DIRECTORY) $(LISTING_DIRECTORY) )
-
-DEBUG_FLAGS    += -D NDEBUG -O3
-
 
 # flags common to all targets
 #CFLAGS += -save-temps
@@ -135,7 +143,6 @@ CFLAGS += -D BLE_DFU_APP_SUPPORT
 CFLAGS += -mcpu=cortex-m0
 CFLAGS += -mthumb -mabi=aapcs --std=gnu99
 CFLAGS += -Wall -Werror
-CFLAGS += -Wa,-adhln
 CFLAGS += -mfloat-abi=soft
 CFLAGS += -ffunction-sections 
 CFLAGS += -fdata-sections -fno-strict-aliasing
@@ -166,8 +173,6 @@ ASM_OBJECTS = $(addprefix $(OBJECT_DIRECTORY)/, $(ASM_SOURCE_FILE_NAMES:.s=.o) )
 
 TOOLCHAIN_BASE = $(basename $(notdir $(GNU_INSTALL_ROOT)))
 
-TIMESTAMP = $(shell date +'%s')
-
 vpath %.c $(C_PATHS)
 vpath %.s $(ASM_PATHS)
 
@@ -180,6 +185,7 @@ all: $(BUILD_DIRECTORIES) $(OBJECTS)
 
 	@echo "*****************************************************"
 	@echo "build project: $(OUTPUT_NAME)"
+	@echo "build type:    $(BUILD_TYPE)"
 	@echo "build with:    $(TOOLCHAIN_BASE)"
 	@echo "build target:  $(TARGET_BOARD)"
 	@echo "build SOC:     $(TARGET_SOC)"
