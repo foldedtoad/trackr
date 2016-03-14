@@ -118,14 +118,12 @@ OUTPUT_BINARY_DIRECTORY = $(OBJECT_DIRECTORY)
 
 ifeq ($(MAKECMDGOALS),debug)
   BUILD_TYPE := debug
-endif
-
-ifeq ($(BUILD_TYPE),debug)
   DEBUG_FLAGS += -D DEBUG -g -O0
   CFLAGS += -Wa,-adhln
 else
   BUILD_TYPE := release
   DEBUG_FLAGS += -D NDEBUG -O3
+  CFLAGS += -Wa,-adhln
 endif
 
 # Sorting removes duplicates
@@ -176,7 +174,8 @@ TOOLCHAIN_BASE = $(basename $(notdir $(GNU_INSTALL_ROOT)))
 vpath %.c $(C_PATHS)
 vpath %.s $(ASM_PATHS)
 
-OBJECTS = $(C_OBJECTS) $(ASM_OBJECTS)
+OBJECTS  = $(C_OBJECTS) $(ASM_OBJECTS)
+LISTINGS = $(OUTPUT_BINARY_DIRECTORY)/$(OUTPUT_NAME).lst
 
 all: $(BUILD_DIRECTORIES) $(OBJECTS)
 	@echo Linking target: $(OUTPUT_NAME).elf
@@ -230,7 +229,12 @@ $(OUTPUT_BINARY_DIRECTORY)/$(OUTPUT_NAME).hex: $(OUTPUT_BINARY_DIRECTORY)/$(OUTP
 	@echo Preparing: $(OUTPUT_NAME).hex
 	$(NO_ECHO)$(OBJCOPY) -O ihex $(OUTPUT_BINARY_DIRECTORY)/$(OUTPUT_NAME).elf $(OUTPUT_BINARY_DIRECTORY)/$(OUTPUT_NAME).hex
 
-finalize: echosize
+# Create disassemble .lst from the .elf file
+$(OUTPUT_BINARY_DIRECTORY)/$(OUTPUT_NAME).lst: $(OUTPUT_BINARY_DIRECTORY)/$(OUTPUT_NAME).elf
+	@echo Disasm listing: $(OUTPUT_NAME).lst
+	$(NO_ECHO)$(OBJDUMP) -dSt $^ > $(OUTPUT_BINARY_DIRECTORY)/$(OUTPUT_NAME).lst
+
+finalize: $(LISTINGS) echosize
 
 echosize:
 	-@echo ""
