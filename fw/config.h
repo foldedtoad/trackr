@@ -107,7 +107,8 @@
 /* 
  *  Go to https://goo.gl for utility to shortening URL names.
  */
-#define URL_STRING                      "goo.gl/jjurOU"
+#define URL_MAX_LENGTH                  16
+#define URL_DEFAULT_STRING              "goo.gl/jjurOU"
 #define URL_LENGTH                      (sizeof(URL_STRING) - 1)
 
 /*

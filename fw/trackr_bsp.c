@@ -142,6 +142,12 @@ static uint32_t bsp_led_indication(bsp_indication_t indicate)
             err_code       = app_timer_start(m_leds_timer_id, BSP_MS_TO_TICK(next_delay), NULL);
             break;
 
+        case BSP_INDICATE_ADVERTISING_DONE:
+            LEDS_OFF(LEDS_MASK & ~BSP_LED_0_MASK & ~ALERT_LED_MASK);
+            m_stable_state = indicate;
+            err_code       = app_timer_start(m_leds_timer_id, BSP_MS_TO_TICK(next_delay), NULL);
+            break;
+
         case BSP_INDICATE_CONNECTED:
             LEDS_OFF(LEDS_MASK & ~BSP_LED_0_MASK & ~ALERT_LED_MASK);
             LEDS_ON(BSP_LED_0_MASK);

@@ -6,4 +6,4 @@ mon flash device=NRF51822
 mon reset 0
 set confirm off
 set output-radix 16
-file _build/application.elf
+file _build/trackr.elf

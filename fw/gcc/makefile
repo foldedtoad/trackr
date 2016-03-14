@@ -60,6 +60,7 @@ remduplicates = $(strip $(if $1,$(firstword $1) $(call remduplicates,$(filter-ou
 C_SOURCE_FILES += ../main.c
 C_SOURCE_FILES += ../advert.c
 C_SOURCE_FILES += ../connect.c
+C_SOURCE_FILES += ../ble_eddy.c
 C_SOURCE_FILES += ../eddystone.c
 C_SOURCE_FILES += ../battery.c
 C_SOURCE_FILES += ../temperature.c

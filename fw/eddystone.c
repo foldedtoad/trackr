@@ -12,6 +12,7 @@
 
 #include "config.h"
 #include "eddystone.h"
+#include "ble_eddy.h"
 #include "battery.h"
 #include "temperature.h"
 
@@ -194,8 +195,11 @@ static void build_url_frame_buffer(void)
     encoded_advdata[(*len_advdata)++] = URL_PREFIX__http;
 
     /* Set URL string */
-    memcpy(&encoded_advdata[(*len_advdata)], URL_STRING, URL_LENGTH);
-    *len_advdata += URL_LENGTH;
+    memcpy(&encoded_advdata[(*len_advdata)], 
+           eddy_url_str_get(), 
+           eddy_url_len_get());
+
+    *len_advdata += eddy_url_len_get();
 
     /* Update Service Data Length. */
     encoded_advdata[SERVICE_DATA_OFFSET] = (*len_advdata) - SVC_DATA_LEN_OFFSET;

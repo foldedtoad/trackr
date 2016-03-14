@@ -17,6 +17,7 @@
 #include "pstorage.h"
 
 #include "config.h"
+#include "ble_eddy.h"
 #include "advert.h"
 #include "connect.h"
 #include "pstorage_platform.h"
@@ -161,7 +162,7 @@ static void on_ble_evt(ble_evt_t * p_ble_evt)
 /*---------------------------------------------------------------------------*/
 void services_init(void)
 {    
-    // FIXME add init of Trackr service.
+    APP_ERROR_CHECK( ble_eddy_init(&g_eddy_service) );
 }
 
 /*---------------------------------------------------------------------------*/
