@@ -2,7 +2,6 @@
  *  trackr_bsp.c
  *  Copyright (c) 2016 Robin Callender. All Rights Reserved
  */
-
 #include "config.h"
 
 #include <stddef.h>
@@ -16,6 +15,7 @@
 #include "app_timer.h"
 #include "app_gpiote.h"
 #include "app_button.h"
+#include "dbglog.h"
 
 #define ADVERTISING_LED_ON_INTERVAL            200
 #define ADVERTISING_LED_OFF_INTERVAL           1800
@@ -139,13 +139,13 @@ static uint32_t bsp_led_indication(bsp_indication_t indicate)
             }
 
             m_stable_state = indicate;
-            err_code       = app_timer_start(m_leds_timer_id, BSP_MS_TO_TICK(next_delay), NULL);
+            err_code = app_timer_start(m_leds_timer_id, BSP_MS_TO_TICK(next_delay), NULL);
             break;
 
         case BSP_INDICATE_ADVERTISING_DONE:
-            LEDS_OFF(LEDS_MASK & ~BSP_LED_0_MASK & ~ALERT_LED_MASK);
+            LEDS_OFF(BSP_LED_0_MASK);
             m_stable_state = indicate;
-            err_code       = app_timer_start(m_leds_timer_id, BSP_MS_TO_TICK(next_delay), NULL);
+            err_code = app_timer_stop(m_leds_timer_id);
             break;
 
         case BSP_INDICATE_CONNECTED:

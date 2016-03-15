@@ -21,6 +21,7 @@
 #include "advert.h"
 #include "connect.h"
 #include "pstorage_platform.h"
+#include "dbglog.h"
 
 /*---------------------------------------------------------------------------*/
 /*                                                                           */
@@ -130,6 +131,8 @@ static void on_ble_evt(ble_evt_t * p_ble_evt)
         case BLE_GAP_EVT_CONNECTED:
             m_conn_handle = p_ble_evt->evt.gap_evt.conn_handle;
 
+            PUTS("CONNECTED");
+
             APP_ERROR_CHECK( bsp_indication_set(BSP_INDICATE_CONNECTED) );
             
             break;
@@ -137,7 +140,10 @@ static void on_ble_evt(ble_evt_t * p_ble_evt)
         case BLE_GAP_EVT_DISCONNECTED:
             m_conn_handle = BLE_CONN_HANDLE_INVALID;
 
+            PUTS("DISCONNECTED");
+
             advertising_start_connectable();
+
             break;
 
         case BLE_GAP_EVT_SEC_INFO_REQUEST:
@@ -146,6 +152,8 @@ static void on_ble_evt(ble_evt_t * p_ble_evt)
         case BLE_GAP_EVT_TIMEOUT:
             if (p_ble_evt->evt.gap_evt.params.timeout.src == BLE_GAP_TIMEOUT_SRC_ADVERTISEMENT) {
 
+                PUTS("ADVERTISE TIMEOUT");
+                
                 /* Set to Non-Connect Advertising mode */
                 advertising_start_nonconnectable();
             }

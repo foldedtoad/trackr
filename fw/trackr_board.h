@@ -11,16 +11,29 @@
 /*                                                                           */
 /*---------------------------------------------------------------------------*/
 
-#define TRACKR_BUZZER_R        P0_10
+#define TRACKR_RX              P0_10
 #define TRACKR_BUTTON          P0_17
 #define TRACKR_LED             P0_19
-#define TRACKR_BUZZER_L        P0_23
+#define TRACKR_TX              P0_23
+
+
+/* NOTE: Subverting the buzzer GPIOs to be UART GPIOs */
+
+//#define TRACKR_BUZZER_R        P0_10
+//#define TRACKR_BUZZER_L        P0_23
 
 /*---------------------------------------------------------------------------*/
 /*                                                                           */
 /*---------------------------------------------------------------------------*/
 
-#define LEDS_NUMBER    1
+#define TX_PIN_NUMBER       TRACKR_TX
+#define RX_PIN_NUMBER       TRACKR_RX
+
+/*---------------------------------------------------------------------------*/
+/*                                                                           */
+/*---------------------------------------------------------------------------*/
+
+#define LEDS_NUMBER         1
 
 #define LED_BLUE            TRACKR_LED
 #define BSP_LED_0           LED_BLUE
@@ -33,7 +46,7 @@
 /*                                                                           */
 /*---------------------------------------------------------------------------*/
 
-#define BUTTONS_NUMBER 1
+#define BUTTONS_NUMBER      1
 
 #define BUTTON_0            TRACKR_BUTTON
 #define BSP_BUTTON_0        BUTTON_0

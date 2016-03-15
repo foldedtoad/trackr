@@ -20,6 +20,11 @@
 #define IS_SRVC_CHANGED_CHARACT_PRESENT 1
 
 /*
+ *
+ */
+ #define DEVICE_NAME                    "EDDY"
+
+/*
  *  GAP parameters
  */
 #define MIN_CONN_INTERVAL               MSEC_TO_UNITS(100, UNIT_1_25_MS)

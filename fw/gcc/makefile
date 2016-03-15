@@ -2,7 +2,9 @@
 #  Eddystone for trackr device 
 #------------------------------------------------------------------------------
 
-TARGET_BOARD   = trackr
+TARGET_BOARD   := trackr
+
+DBGLOG_SUPPORT := "yes"
 
 #------------------------------------------------------------------------------
 # Define relative paths to SDK components
@@ -65,6 +67,12 @@ C_SOURCE_FILES += ../eddystone.c
 C_SOURCE_FILES += ../battery.c
 C_SOURCE_FILES += ../temperature.c
 C_SOURCE_FILES += ../trackr_bsp.c
+C_SOURCE_FILES += ../printf.c
+
+ifeq ($(DBGLOG_SUPPORT), "yes")
+	CFLAGS += -D DBGLOG_SUPPORT=1
+	C_SOURCE_FILES += ../uart.c
+endif
 
 C_SOURCE_FILES += $(COMPONENTS)/libraries/button/app_button.c
 C_SOURCE_FILES += $(COMPONENTS)/libraries/fifo/app_fifo.c
@@ -187,7 +195,8 @@ all: $(BUILD_DIRECTORIES) $(OBJECTS)
 	@echo "build type:    $(BUILD_TYPE)"
 	@echo "build with:    $(TOOLCHAIN_BASE)"
 	@echo "build target:  $(TARGET_BOARD)"
-	@echo "build SOC:     $(TARGET_SOC)"
+	@echo "build options  --"
+	@echo "               DBGLOG_SUPPORT     $(DBGLOG_SUPPORT)"
 	@echo "build products --"
 	@echo "               $(OUTPUT_NAME).elf"
 	@echo "               $(OUTPUT_NAME).hex"

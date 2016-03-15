@@ -10,25 +10,83 @@
 #include "softdevice_handler.h"
 #include "ble_advdata.h"
 #include "app_timer.h"
+#include "app_error.h"
 #include "app_scheduler.h"
 
 #include "config.h"
 #include "advert.h"
 #include "connect.h"
 #include "eddystone.h"
+#include "uart.h"
+#include "dbglog.h"
+
+
+/*---------------------------------------------------------------------------*/
+/*                                                                           */
+/*---------------------------------------------------------------------------*/
+#ifdef DBGLOG_SUPPORT
+static const struct {
+    uint16_t  error_code;
+    char    * text;
+} nrf_errors [] = {
+    { NRF_ERROR_SVC_HANDLER_MISSING,    "SVC_HANDLER_MISSING" },
+    { NRF_ERROR_SOFTDEVICE_NOT_ENABLED, "SD_NOT_ENABLED"      },
+    { NRF_ERROR_INTERNAL,               "INTERNAL"            },
+    { NRF_ERROR_NO_MEM,                 "NO_MEM"              },
+    { NRF_ERROR_NOT_FOUND,              "NOT_FOUND"           },
+    { NRF_ERROR_NOT_SUPPORTED,          "NOT_SUPPORTED"       },
+    { NRF_ERROR_INVALID_PARAM,          "INVALID_PARAMETER"   },
+    { NRF_ERROR_INVALID_STATE,          "INVALID_STATE"       },
+    { NRF_ERROR_INVALID_LENGTH,         "INVALID_LENGTH"      },
+    { NRF_ERROR_INVALID_FLAGS,          "INVALID_FLAGS"       },
+    { NRF_ERROR_INVALID_DATA,           "INVALID_DATA"        },
+    { NRF_ERROR_DATA_SIZE,              "DATA_SIZE"           },
+    { NRF_ERROR_TIMEOUT,                "TIMEOUT"             },
+    { NRF_ERROR_NULL,                   "NULL"                },
+    { NRF_ERROR_FORBIDDEN,              "FORBIDDEN"           },
+    { NRF_ERROR_INVALID_ADDR,           "INVALID_ADDR"        },
+    { NRF_ERROR_BUSY,                   "BUSY"                },
+};
+#define NRF_ERRORS_COUNT (sizeof(nrf_errors)/sizeof(nrf_errors[0]))
+#endif /* DBGLOG_SUPPORT */
 
 /*---------------------------------------------------------------------------*/
 /*                                                                           */
 /*---------------------------------------------------------------------------*/
 void app_error_handler(uint32_t error_code, 
-                       uint32_t line_num, 
-                       const uint8_t * p_file_name)
+                       uint32_t line, 
+                       const uint8_t * filename)
 {
-#if defined(DEBUG)
-    __BKPT(0);
+#ifdef DBGLOG_SUPPORT
+    char * text = NULL;
+
+    for (int i=0; i < NRF_ERRORS_COUNT; i++) {
+        if (error_code == nrf_errors[i].error_code) {
+            text = nrf_errors[i].text;
+            break;
+        }
+    }
+
+    char   buffer [10];
+
+    if (text == NULL) {
+        sprintf(buffer, "0x%x", (unsigned) error_code);
+        text = (char*) &buffer;
+    }
+
+    PRINTF("app_error_handler: NRF_ERROR_%s 0x%x, at %s(%d)\n", 
+           text, (unsigned)error_code, (char*)filename, (int)line);
+
+#ifdef DEBUG
+    __BKPT();
 #endif
 
-    NVIC_SystemReset();
+#endif /* DBGLOG_SUPPORT */
+
+    __disable_irq();
+
+    /* The system can only recover with a reset (reboot). */
+    NVIC_SystemReset(); 
 }
 
 /*---------------------------------------------------------------------------*/
@@ -121,6 +179,12 @@ int main(void)
 {
     ble_stack_init();
     scheduler_init();
+
+#if defined(DBGLOG_SUPPORT)
+    uart_init();
+#endif
+
+    PRINTF("\n*** firmware built: %s %s ***\n\n", __DATE__, __TIME__);
 
     storage_init();
     timer_init();

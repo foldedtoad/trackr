@@ -11,6 +11,7 @@
 
 #include "config.h"
 #include "ble_eddy.h"
+#include "dbglog.h"
 
 static char     m_eddy_url [URL_MAX_LENGTH];
 
@@ -88,7 +89,7 @@ static void on_write(ble_eddy_t * p_eddy, ble_evt_t * p_ble_evt)
             break;
 
         default:
-            // Quietly ignore these events.
+            /* Quietly ignore these events. */
             break;
     }  
 }
@@ -145,7 +146,7 @@ static uint32_t url_char_add(ble_eddy_t * p_eddy)
     desc_md.vloc = BLE_GATTS_VLOC_STACK;
 
     memset(&char_pf, 0, sizeof(char_pf));
-    char_pf.format = BLE_GATT_CPF_FORMAT_UTF8S;  // UTF8 String
+    char_pf.format = BLE_GATT_CPF_FORMAT_UTF8S;  /* UTF8 String */
 
     memset(&char_md, 0, sizeof(char_md));
     char_md.char_props.read         = 1;
@@ -164,7 +165,7 @@ static uint32_t url_char_add(ble_eddy_t * p_eddy)
     memset(&attr_md, 0, sizeof(attr_md));
     BLE_GAP_CONN_SEC_MODE_SET_OPEN(&attr_md.read_perm);
     BLE_GAP_CONN_SEC_MODE_SET_OPEN(&attr_md.write_perm);
-    attr_md.vloc       = BLE_GATTS_VLOC_USER;              // NOTE using app storage
+    attr_md.vloc       = BLE_GATTS_VLOC_USER;              /* NOTE using app storage */
     attr_md.rd_auth    = 0;
     attr_md.wr_auth    = 0;
     attr_md.vlen       = 0;
@@ -191,14 +192,16 @@ uint32_t ble_eddy_init(ble_eddy_t * p_eddy)
     uint32_t   err_code;
     ble_uuid_t ble_uuid;
 
-    // Initialize default URL.
+    PUTS(__func__);
+
+    /* Initialize default URL. */
     strncpy(m_eddy_url, URL_DEFAULT_STRING, URL_MAX_LENGTH);
     m_eddy_url_len = strlen(URL_DEFAULT_STRING);
 
-    // Initialize service structure
+    /* Initialize service structure */
     p_eddy->conn_handle    = BLE_CONN_HANDLE_INVALID;
 
-    // Add service
+    /* Add service */
     ble_uuid128_t base_uuid = {EDDY_UUID_BASE};
     err_code = sd_ble_uuid_vs_add(&base_uuid, &p_eddy->uuid_type);
     if (err_code != NRF_SUCCESS) {
@@ -208,7 +211,9 @@ uint32_t ble_eddy_init(ble_eddy_t * p_eddy)
     ble_uuid.type = p_eddy->uuid_type;
     ble_uuid.uuid = EDDY_UUID_SERVICE;
 
-    err_code = sd_ble_gatts_service_add(BLE_GATTS_SRVC_TYPE_PRIMARY, &ble_uuid, &p_eddy->service_handle);
+    err_code = sd_ble_gatts_service_add(BLE_GATTS_SRVC_TYPE_PRIMARY, 
+                                        &ble_uuid, 
+                                        &p_eddy->service_handle);
     if (err_code != NRF_SUCCESS) {
         return err_code;
     }
