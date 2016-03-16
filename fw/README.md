@@ -26,4 +26,9 @@ If you do not attempt to connect to the TrackR device, and allow the 20 second t
 
 From an Android system, you can use the Google "Physical Web" app to listen for Eddystone beacons. After as few seconds, the Physical Web app should display an entry for your URL.  Click on it will take you to that URL's site.
 
+Physical Web app:  https://play.google.com/store/apps/details?id=physical_web.org.physicalweb&hl=en
+
+
+
+
 
