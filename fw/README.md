@@ -14,9 +14,11 @@ This implementation currently only works with the TrackR beacon with the S110 so
 
 This example build against version 7.2.0 of the nRF SDK. With the SDK, gcc and segger's JLink installed (I'll refer you to [https://www.nordicsemi.com/] for tutorials how to get started with the nRF SDK) this work to get a working beacon:
 
-This beacon uses a fixed UID, but the URL is updatable via, for example, the Nordic's Android Master Control Panel app. 
+This beacon uses a fixed UID, but the URL is updatable via. For example, the Nordic's Android Master Control Panel app can be use to update the URLs. 
 
-The next section assmumes you have an Android system and have the Nordic Master Control Panel (MCP) installed on it.  
+Master Control Panel app: https://play.google.com/store/apps/details?id=no.nordicsemi.android.mcp&hl=en
+
+The next section assumes you have an Android system and have the Nordic Master Control Panel (MCP) installed on it.  
 
 When the TrackR device is powered on, ie. inserting battery, there is a 20 second window during which the device advertises as "connectable".  During this time the blue LED will be slowly flashing. This window allows you to connect to the TrackR with the MCP. When you successfully connect, the LED will turn solid blue.  NOTE: try to minimize you time connected, as leaving the LED on for extended periods of time will quickly deplete the battery.
 
