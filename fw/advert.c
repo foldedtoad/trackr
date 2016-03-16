@@ -66,6 +66,20 @@ static void advertising_connectable_init(void)
         {BLE_UUID_DEVICE_INFORMATION_SERVICE, BLE_UUID_TYPE_BLE},
     };
 
+        /* Set the device name */
+    {
+        ble_gap_conn_sec_mode_t sec_mode;
+
+        BLE_GAP_CONN_SEC_MODE_SET_OPEN(&sec_mode);
+
+        PRINTF("name: \"%s\"\n", device_name);
+
+        err_code = sd_ble_gap_device_name_set(&sec_mode,
+                                              (const uint8_t *) device_name,
+                                              strlen(device_name));
+        APP_ERROR_CHECK(err_code);
+    }
+
     /* Build ADVertisement data */
     memset(&advdata, 0, sizeof(advdata));
     advdata.name_type    = BLE_ADVDATA_FULL_NAME;
@@ -93,20 +107,6 @@ static void advertising_connectable_init(void)
 
     err_code = sd_ble_gap_address_set(BLE_GAP_ADDR_CYCLE_MODE_NONE, &mac);
     APP_ERROR_CHECK(err_code);
-
-    /* Set the device name */
-    {
-        ble_gap_conn_sec_mode_t sec_mode;
-
-        BLE_GAP_CONN_SEC_MODE_SET_OPEN(&sec_mode);
-
-        PRINTF("name: \"%s\"\n", device_name);
-
-        err_code = sd_ble_gap_device_name_set(&sec_mode,
-                                              (const uint8_t *) device_name,
-                                              strlen(device_name));
-        APP_ERROR_CHECK(err_code);
-    }
 }
 
 /*---------------------------------------------------------------------------*/

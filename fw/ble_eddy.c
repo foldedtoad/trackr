@@ -156,10 +156,10 @@ static uint32_t url_char_add(ble_eddy_t * p_eddy)
 
     memset(&char_md, 0, sizeof(char_md));
     char_md.char_props.read         = 1;
-    char_md.char_props.write        = 1;
+    char_md.char_props.write        = 0;
     char_md.p_char_user_desc        = (uint8_t*) &user_desc;
-    char_md.char_user_desc_size     = m_eddy_url_len;
-    char_md.char_user_desc_max_size = URL_MAX_LENGTH;
+    char_md.char_user_desc_size     = sizeof(user_desc);
+    char_md.char_user_desc_max_size = sizeof(user_desc);
     char_md.p_char_pf               = &char_pf;
     char_md.p_user_desc_md          = &desc_md;
     char_md.p_cccd_md               = NULL;
