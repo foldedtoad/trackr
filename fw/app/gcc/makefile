@@ -10,7 +10,7 @@ DBGLOG_SUPPORT := "no"
 # Define relative paths to SDK components
 #------------------------------------------------------------------------------
 
-SDK_BASE      = ../../..
+SDK_BASE      = ../../../..
 COMPONENTS    = $(SDK_BASE)/components
 TEMPLATE_PATH = $(COMPONENTS)/toolchain/gcc
 
