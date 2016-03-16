@@ -29,13 +29,9 @@
 
 #define SERVICE_DATA_OFFSET      0x07
 
-#define URL_PREFIX__http_www     0x00
-#define URL_PREFIX__https_www    0x01
-#define URL_PREFIX__http         0x02
-#define URL_PREFIX__https        0x03
-
 #define TLM_VERSION              0x00
  
+
 /*---------------------------------------------------------------------------*/
 /*                                                                           */
 /*---------------------------------------------------------------------------*/
@@ -81,6 +77,77 @@ static const eddystone_header_t  header = {
 };
 
 #define SVC_DATA_LEN_OFFSET  (offsetof(eddystone_header_t, svc_data_len) + 1)
+
+/*---------------------------------------------------------------------------*/
+/*                                                                           */
+/*---------------------------------------------------------------------------*/
+
+#define URL_PREFIX__http_www     0x00
+#define URL_PREFIX__https_www    0x01
+#define URL_PREFIX__http         0x02
+#define URL_PREFIX__https        0x03
+
+typedef struct {
+    uint8_t     encoding;
+    char      * prefix;
+} url_prefix_t;
+
+static const url_prefix_t  url_prefixes [] = {
+    { .encoding = URL_PREFIX__http_www,  .prefix = "http://www"  },
+    { .encoding = URL_PREFIX__https_www, .prefix = "https://www" },
+    { .encoding = URL_PREFIX__http,      .prefix = "http://"     },
+    { .encoding = URL_PREFIX__https,     .prefix = "https://"    },
+};
+
+#define URL_PREFIXES_COUNT (sizeof(url_prefixes)/sizeof(url_prefix_t))
+
+/*---------------------------------------------------------------------------*/
+/*                                                                           */
+/*---------------------------------------------------------------------------*/
+static uint32_t encode_url(uint8_t * encoded_advdata, uint8_t * len_advdata)
+{
+    uint8_t   i;
+    uint8_t   prefix_len;
+
+    char    * url     = (char*) eddy_url_str_get();
+    uint8_t   url_len = eddy_url_len_get();
+    char    * encoded = (char*)encoded_advdata;
+
+    uint8_t   prefix = URL_PREFIX__http;
+
+    if (*url == 0)     return NRF_ERROR_DATA_SIZE;
+    if ( url_len == 0) return NRF_ERROR_DATA_SIZE;
+
+    for (i=0; i < URL_PREFIXES_COUNT; i++) {
+
+        prefix_len = strlen(url_prefixes[i].prefix);
+
+        if (strncmp(url, url_prefixes[i].prefix, prefix_len) == 0) {
+
+            prefix = url_prefixes[i].encoding;
+
+            url     += prefix_len;
+            url_len -= prefix_len;
+
+            printf("url: \"%s\", url_len: %u, prefix: %d\n", 
+                   url, (unsigned) url_len, prefix);
+            break;
+        }
+    }
+    
+    if (*url == 0)    return NRF_ERROR_DATA_SIZE;
+    if (url_len == 0) return NRF_ERROR_DATA_SIZE;
+
+    if (url_len > URL_MAX_LENGTH -1) return NRF_ERROR_DATA_SIZE;
+
+    *encoded++ = prefix;
+    (*len_advdata)++;
+
+    strncpy(encoded, url, url_len);
+    *len_advdata += url_len;
+
+    return NRF_SUCCESS;
+}
 
 /*---------------------------------------------------------------------------*/
 /*                                                                           */
@@ -180,6 +247,7 @@ static void build_tlm_frame_buffer(void)
     encoded_advdata[SERVICE_DATA_OFFSET] = (*len_advdata) - SVC_DATA_LEN_OFFSET;
 }
 
+
 /*---------------------------------------------------------------------------*/
 /*                                                                           */
 /*---------------------------------------------------------------------------*/
@@ -187,20 +255,18 @@ static void build_url_frame_buffer(void)
 {
     uint8_t * encoded_advdata =  eddystone_frames[EDDYSTONE_URL].adv_frame;
     uint8_t * len_advdata     = &eddystone_frames[EDDYSTONE_URL].adv_len;
+    uint32_t  err_code;
 
     *len_advdata = 0;
 
     eddystone_header(encoded_advdata, EDDYSTONE_URL_TYPE, len_advdata);
 
     encoded_advdata[(*len_advdata)++] = APP_MEASURED_RSSI;
-    encoded_advdata[(*len_advdata)++] = URL_PREFIX__http;
 
-    /* Set URL string */
-    memcpy(&encoded_advdata[(*len_advdata)], 
-           eddy_url_str_get(), 
-           eddy_url_len_get());
-
-    *len_advdata += eddy_url_len_get();
+    err_code = encode_url(&encoded_advdata[(*len_advdata)], len_advdata);
+    if (err_code != NRF_SUCCESS) {
+        PUTS("encode_url failed");
+    }
 
     /* Update Service Data Length. */
     encoded_advdata[SERVICE_DATA_OFFSET] = (*len_advdata) - SVC_DATA_LEN_OFFSET;
