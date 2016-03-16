@@ -20,7 +20,7 @@ Master Control Panel app: https://play.google.com/store/apps/details?id=no.nordi
 
 The next section assumes you have an Android system and have the Nordic Master Control Panel (MCP) installed on it.  
 
-When the TrackR device is powered on, ie. inserting battery, there is a 20 second window during which the device advertises as "connectable".  During this time the blue LED will be slowly flashing. This window allows you to connect to the TrackR with the MCP. When you successfully connect, the LED will turn solid blue.  NOTE: try to minimize you time connected, as leaving the LED on for extended periods of time will quickly deplete the battery.
+When the TrackR device is powered on, ie. inserting battery, there is a 20 second window during which the device advertises as connectable, but no name.  During this time the blue LED will be slowly flashing. This window allows you to connect to the TrackR with the MCP. When you successfully connect, the LED will turn solid blue.  NOTE: try to minimize you time connected, as leaving the LED on for extended periods of time will quickly deplete the battery.
 
 Once connected and the service and characteristics have resolved, you will notice an "Unknown Characteristic": this is the Trackr Service's URL characteristic. Click on this line to expand the characteristic. Next click on the up-arrow (on the right) to pop up the data entry box.  Select the "Text" Type and entery a new shortened URL. You must use a URL shortener utility, such as "Google URL Shortener" (https://goo.gl), to generate a compact form of you URL.  This is due to the limited space (17 bytes) in the Eddystone URL advertise format.
 
