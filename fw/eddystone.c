@@ -15,6 +15,7 @@
 #include "ble_eddy.h"
 #include "battery.h"
 #include "temperature.h"
+#include "dbglog.h"
 
 /*---------------------------------------------------------------------------*/
 /*                                                                           */
@@ -72,10 +73,10 @@ static const eddystone_header_t  header = {
     .flags_data    = 0x06,
     .svc_uuid_len  = 0x03,
     .svc_uuid_type = 0x03,
-    .svc_uuid_list = 0xFEAA,  // 0xAAFE  big-endian flip
+    .svc_uuid_list = 0xFEAA,  // 0xAAFE  byte-swapped
     .svc_data_len  = 0x03,
     .svc_data_type = 0x16,
-    .svc_data_uuid = 0xFEAA,  // 0xAAFE  big-endian flip
+    .svc_data_uuid = 0xFEAA,  // 0xAAFE  byte-swapped
     .frame_type    = 0x00,
 };
 
@@ -203,6 +204,8 @@ static void build_url_frame_buffer(void)
 
     /* Update Service Data Length. */
     encoded_advdata[SERVICE_DATA_OFFSET] = (*len_advdata) - SVC_DATA_LEN_OFFSET;
+
+    dump_bytes(encoded_advdata, *len_advdata);
 }
 
 /*---------------------------------------------------------------------------*/

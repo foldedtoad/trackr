@@ -11,13 +11,15 @@
 #define PRINTF   printf
 #define PUTS     puts
 
+void dump_bytes(uint8_t * Buffer, int Length);
+
 #else /* DBGLOG_SUPPORT */
 
 #define PRINTF(...)
 #define PUTS(s)
 
-#endif /* DBGLOG_SUPPORT */
+#define dump_bytes(a, b)
 
-#define TRACE PRINTF("at: %s(%d)\n", __FUNCTION__, __LINE__)
+#endif /* DBGLOG_SUPPORT */
 
 #endif  /* DBGLOG_H */

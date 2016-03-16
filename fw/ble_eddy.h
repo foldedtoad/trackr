@@ -40,22 +40,16 @@ extern ble_eddy_t  g_eddy_service;
 
 /*  Function for initializing the Eddy Service.
  *
- * @param[out]  p_eddy       Eddy Service structure. This structure will have to be supplied by
- *                           the application. It will be initialized by this function, and will later
- *                           be used to identify this particular service instance.
- * @param[in]   p_eddy_init  Information needed to initialize the service.
- *
  * @return      NRF_SUCCESS on successful initialization of service, otherwise an error code.
  */
-uint32_t ble_eddy_init(ble_eddy_t * p_eddy);
+uint32_t ble_eddy_init(void);
 
 /*  Function for handling the Application's BLE Stack events.
  *  Handles all events from the BLE stack of interest to the LED Button Service.
  *
- *   param[in]   p_eddy     eddy Service structure.
  *   param[in]   p_ble_evt  Event received from the BLE stack.
  */
-void ble_eddy_on_ble_evt(ble_eddy_t * p_lbs, ble_evt_t * p_ble_evt);
+void ble_eddy_on_ble_evt(ble_evt_t * p_ble_evt);
 
 /*
  * Getter functions for URL related items.

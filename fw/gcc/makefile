@@ -4,7 +4,7 @@
 
 TARGET_BOARD   := trackr
 
-DBGLOG_SUPPORT := "yes"
+DBGLOG_SUPPORT := "no"
 
 #------------------------------------------------------------------------------
 # Define relative paths to SDK components
@@ -72,6 +72,7 @@ C_SOURCE_FILES += ../printf.c
 ifeq ($(DBGLOG_SUPPORT), "yes")
 	CFLAGS += -D DBGLOG_SUPPORT=1
 	C_SOURCE_FILES += ../uart.c
+	C_SOURCE_FILES += ../dump.c
 endif
 
 C_SOURCE_FILES += $(COMPONENTS)/libraries/button/app_button.c

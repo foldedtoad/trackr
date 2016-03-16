@@ -22,6 +22,12 @@
 /*                                                                           */
 /*---------------------------------------------------------------------------*/
 
+static const char * device_name = DEVICE_NAME;
+
+/*---------------------------------------------------------------------------*/
+/*                                                                           */
+/*---------------------------------------------------------------------------*/
+
 static const ble_gap_adv_params_t   m_adv_params_connectable = {
     .type         = BLE_GAP_ADV_TYPE_ADV_IND,
     .p_peer_addr  = NULL,
@@ -50,6 +56,8 @@ static void advertising_connectable_init(void)
     ble_advdata_t advdata;
     ble_advdata_t scanrsp;
 
+    ble_gap_addr_t  mac = { 0 };
+
     flags = BLE_GAP_ADV_FLAGS_LE_ONLY_LIMITED_DISC_MODE;
 
     ble_uuid_t scan_uuids[] = {
@@ -72,16 +80,8 @@ static void advertising_connectable_init(void)
     /* Set ADV and SCAN data */
     err_code = ble_advdata_set(&advdata, &scanrsp);
     APP_ERROR_CHECK(err_code);
-}
 
-/*---------------------------------------------------------------------------*/
-/*                                                                           */
-/*---------------------------------------------------------------------------*/
-static void advertising_set_device_name(void)
-{
-    uint32_t        err_code;
-    ble_gap_addr_t  mac = { 0 };
-
+    /* Set MAC address */
     err_code = sd_ble_gap_address_get( &mac );
     APP_ERROR_CHECK(err_code);
 
@@ -94,25 +94,19 @@ static void advertising_set_device_name(void)
     err_code = sd_ble_gap_address_set(BLE_GAP_ADDR_CYCLE_MODE_NONE, &mac);
     APP_ERROR_CHECK(err_code);
 
-#if 0
-    /* Device name unique-ifier: Use lower 3 bytes of MAC as extension to device name */
+    /* Set the device name */
     {
-        char                    device_name [20];
         ble_gap_conn_sec_mode_t sec_mode;
-
-        sprintf(device_name, "%s_%02X%02X%02X", DEVICE_NAME,
-                mac.addr[2], mac.addr[1], mac.addr[0] );
-
-        PRINTF("device name: %s\n", device_name);
 
         BLE_GAP_CONN_SEC_MODE_SET_OPEN(&sec_mode);
 
+        PRINTF("name: \"%s\"\n", device_name);
+
         err_code = sd_ble_gap_device_name_set(&sec_mode,
-                                              (const uint8_t *) &device_name,
+                                              (const uint8_t *) device_name,
                                               strlen(device_name));
         APP_ERROR_CHECK(err_code);
     }
-#endif
 }
 
 /*---------------------------------------------------------------------------*/
@@ -120,7 +114,7 @@ static void advertising_set_device_name(void)
 /*---------------------------------------------------------------------------*/
 void advertising_start_connectable(void)
 {
-    advertising_set_device_name();
+    PUTS(__func__);
 
     advertising_connectable_init();
 
@@ -134,6 +128,10 @@ void advertising_start_connectable(void)
 /*---------------------------------------------------------------------------*/
 void advertising_start_nonconnectable(void)
 {
+    PUTS(__func__);
+
+    eddystone_init();
+
     APP_ERROR_CHECK( bsp_indication_set(BSP_INDICATE_ADVERTISING_DONE) );
 
     APP_ERROR_CHECK( sd_ble_gap_adv_start(&m_adv_params_nonconnectable) );
@@ -144,6 +142,5 @@ void advertising_start_nonconnectable(void)
 /*---------------------------------------------------------------------------*/
 void advertising_init(void)
 {
-    /* Build (refresh) all Eddystone frames. */
-    eddystone_init();
+    /* TBD */
 }

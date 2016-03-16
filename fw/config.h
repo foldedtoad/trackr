@@ -20,9 +20,9 @@
 #define IS_SRVC_CHANGED_CHARACT_PRESENT 1
 
 /*
- *
+ *  BLE advertised Device Name
  */
- #define DEVICE_NAME                    "EDDY"
+ #define DEVICE_NAME                    "Eddy"
 
 /*
  *  GAP parameters
@@ -113,14 +113,14 @@
  *  Go to https://goo.gl for utility to shortening URL names.
  */
 #define URL_MAX_LENGTH                  16
-#define URL_DEFAULT_STRING              "goo.gl/jjurOU"
+#define URL_DEFAULT_STRING              "goo.gl/CDgVgI"
 #define URL_LENGTH                      (sizeof(URL_STRING) - 1)
 
 /*
- *  8C257BA1-E4F7-4026-A735-B6C01043EEA4  UUID  (generated with uuidgen)
- *  8C257BA1B6C01043EEA4                  Namespace
+ *  73156B80-12AA-4E56-91A3-24C06CC3285F  UUID  (generated with uuidgen)
+ *  73156B8024C06CC3285F                  Namespace
  */
-#define UID_NAMESPACE                   {0x8C,0x25,0x7B,0xA1,0xB6,0xC0,0x10,0x43,0xEE,0xA4}
+#define UID_NAMESPACE                   {0x73,0x15,0x6B,0x80,0x24,0xC0,0x6C,0xC3,0x28,0x5F}
 
 /*
  *  Misc values

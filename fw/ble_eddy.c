@@ -53,7 +53,6 @@ static void on_connect(ble_eddy_t * p_eddy, ble_evt_t * p_ble_evt)
  */
 static void on_disconnect(ble_eddy_t * p_eddy, ble_evt_t * p_ble_evt)
 {
-    UNUSED_PARAMETER(p_ble_evt);
     p_eddy->conn_handle = BLE_CONN_HANDLE_INVALID;
 }
 
@@ -68,7 +67,13 @@ static void on_eddy_url_write(ble_eddy_t * p_eddy, ble_gatts_evt_write_t * p_evt
 
     if (p_evt_write->len < sizeof(new_url)) {
 
-        strncpy((char*)&new_url, (char*)&p_evt_write->data, URL_MAX_LENGTH);
+        memset((char*) &m_eddy_url, 0, URL_MAX_LENGTH);
+
+        strncpy((char*)&m_eddy_url, (char*)&p_evt_write->data, URL_MAX_LENGTH);
+
+        m_eddy_url_len = strlen(m_eddy_url);
+
+        PRINTF("m_eddy_url: \"%s\"\n", m_eddy_url);
     }
 }
 
@@ -98,11 +103,12 @@ static void on_write(ble_eddy_t * p_eddy, ble_evt_t * p_ble_evt)
 /*
  *  Function for handling the BLE events.
  *
- *  param[in]   p_eddy      eddy Service structure.
  *  param[in]   p_ble_evt   Event received from the BLE stack.
  */
-void ble_eddy_on_ble_evt(ble_eddy_t * p_eddy, ble_evt_t * p_ble_evt)
+void ble_eddy_on_ble_evt(ble_evt_t * p_ble_evt)
 {
+    ble_eddy_t * p_eddy = &g_eddy_service;
+
     switch (p_ble_evt->header.evt_id) {
 
         case BLE_GAP_EVT_CONNECTED:
@@ -185,12 +191,14 @@ static uint32_t url_char_add(ble_eddy_t * p_eddy)
 }
 
 /*
- *  Function for initializing eddy's BLE usage.
+ *  Function for initializing eddystone's BLE usage.
  */
-uint32_t ble_eddy_init(ble_eddy_t * p_eddy)
+uint32_t ble_eddy_init(void)
 {
     uint32_t   err_code;
     ble_uuid_t ble_uuid;
+
+    ble_eddy_t * p_eddy = &g_eddy_service;
 
     PUTS(__func__);
 

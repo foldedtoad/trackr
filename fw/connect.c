@@ -153,7 +153,7 @@ static void on_ble_evt(ble_evt_t * p_ble_evt)
             if (p_ble_evt->evt.gap_evt.params.timeout.src == BLE_GAP_TIMEOUT_SRC_ADVERTISEMENT) {
 
                 PUTS("ADVERTISE TIMEOUT");
-                
+
                 /* Set to Non-Connect Advertising mode */
                 advertising_start_nonconnectable();
             }
@@ -169,8 +169,8 @@ static void on_ble_evt(ble_evt_t * p_ble_evt)
 /*                                                                           */
 /*---------------------------------------------------------------------------*/
 void services_init(void)
-{    
-    APP_ERROR_CHECK( ble_eddy_init(&g_eddy_service) );
+{ 
+    APP_ERROR_CHECK( ble_eddy_init());
 }
 
 /*---------------------------------------------------------------------------*/
@@ -178,6 +178,8 @@ void services_init(void)
 /*---------------------------------------------------------------------------*/
 void ble_evt_dispatch(ble_evt_t * p_ble_evt)
 {
+    ble_eddy_on_ble_evt(p_ble_evt);
+
     ble_conn_params_on_ble_evt(p_ble_evt);
 
     dm_ble_evt_handler(p_ble_evt);
