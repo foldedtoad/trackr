@@ -17,6 +17,10 @@
 #include "app_button.h"
 #include "dbglog.h"
 
+/*---------------------------------------------------------------------------*/
+/*                                                                           */
+/*---------------------------------------------------------------------------*/
+
 #define ADVERTISING_LED_ON_INTERVAL            200
 #define ADVERTISING_LED_OFF_INTERVAL           1800
 
@@ -39,11 +43,14 @@
 
 #define ALERT_INTERVAL                         200
 
+/*---------------------------------------------------------------------------*/
+/*                                                                           */
+/*---------------------------------------------------------------------------*/
+
 static bsp_indication_t m_stable_state        = BSP_INDICATE_IDLE;
 static uint32_t         m_app_ticks_per_100ms = 0;
 static uint32_t         m_indication_type     = 0;
 static app_timer_id_t   m_leds_timer_id;
-static app_timer_id_t   m_alert_timer_id;
 
 static bsp_event_callback_t m_registered_callback         = NULL;
 static bsp_event_t          m_events_list[BUTTONS_NUMBER] = {BSP_EVENT_NOTHING};
@@ -61,6 +68,9 @@ static const app_button_cfg_t app_buttons[BUTTONS_NUMBER] =
 
 #define ALERT_LED_MASK BSP_LED_0_MASK
 
+/*---------------------------------------------------------------------------*/
+/*                                                                           */
+/*---------------------------------------------------------------------------*/
 uint32_t bsp_buttons_state_get(uint32_t * p_buttons_state)
 {
     uint32_t result = NRF_SUCCESS;
@@ -79,6 +89,9 @@ uint32_t bsp_buttons_state_get(uint32_t * p_buttons_state)
     return result;
 }
 
+/*---------------------------------------------------------------------------*/
+/*                                                                           */
+/*---------------------------------------------------------------------------*/
 uint32_t bsp_button_is_pressed(uint32_t button, bool * p_state)
 {
     uint32_t buttons = ~NRF_GPIO->IN;
@@ -88,6 +101,9 @@ uint32_t bsp_button_is_pressed(uint32_t button, bool * p_state)
     return NRF_SUCCESS;
 }
 
+/*---------------------------------------------------------------------------*/
+/*                                                                           */
+/*---------------------------------------------------------------------------*/
 static void bsp_button_event_handler(uint8_t pin_no, uint8_t button_action)
 {
     bsp_event_t event  = BSP_EVENT_NOTHING;
@@ -108,6 +124,9 @@ static void bsp_button_event_handler(uint8_t pin_no, uint8_t button_action)
     }
 }
 
+/*---------------------------------------------------------------------------*/
+/*                                                                           */
+/*---------------------------------------------------------------------------*/
 static uint32_t bsp_led_indication(bsp_indication_t indicate)
 {
     uint32_t err_code   = NRF_SUCCESS;
@@ -120,11 +139,8 @@ static uint32_t bsp_led_indication(bsp_indication_t indicate)
             m_stable_state = indicate;
             break;
 
-        case BSP_INDICATE_SCANNING:
         case BSP_INDICATE_ADVERTISING:
             LEDS_OFF(LEDS_MASK & ~BSP_LED_0_MASK & ~ALERT_LED_MASK);
-
-            // in advertising, so blink LED 0
             if (LED_IS_ON(BSP_LED_0_MASK)) {
                 LEDS_OFF(BSP_LED_0_MASK);
                 next_delay = indicate ==
@@ -137,7 +153,6 @@ static uint32_t bsp_led_indication(bsp_indication_t indicate)
                              BSP_INDICATE_ADVERTISING ? ADVERTISING_LED_ON_INTERVAL :
                              ADVERTISING_SLOW_LED_ON_INTERVAL;
             }
-
             m_stable_state = indicate;
             err_code = app_timer_start(m_leds_timer_id, BSP_MS_TO_TICK(next_delay), NULL);
             break;
@@ -154,49 +169,22 @@ static uint32_t bsp_led_indication(bsp_indication_t indicate)
             m_stable_state = indicate;
             break;
 
-
-        case BSP_INDICATE_ALERT_0:
-        case BSP_INDICATE_ALERT_1:
-        case BSP_INDICATE_ALERT_2:
-        case BSP_INDICATE_ALERT_3:
-        case BSP_INDICATE_ALERT_OFF:
-            err_code   = app_timer_stop(m_alert_timer_id);
-            next_delay = (uint32_t)BSP_INDICATE_ALERT_OFF - (uint32_t)indicate;
-
-            // a little trick to find out that if it did not fall through ALERT_OFF
-            if (next_delay && (err_code == NRF_SUCCESS)) {
-                if (next_delay > 1) {
-                    err_code = app_timer_start(m_alert_timer_id, BSP_MS_TO_TICK(
-                                               (next_delay * ALERT_INTERVAL)), 
-                                                NULL);
-                }
-                LEDS_ON(ALERT_LED_MASK);
-            }
-            else {
-                LEDS_OFF(ALERT_LED_MASK);
-            }
-            break;
-
-        case BSP_INDICATE_USER_STATE_OFF:
-            LEDS_OFF(LEDS_MASK);
+        case BSP_INDICATE_USER_STATE_ON:
+            LEDS_OFF(LEDS_MASK & ~BSP_LED_0_MASK & ~ALERT_LED_MASK);
+            LEDS_ON(BSP_LED_0_MASK);
             m_stable_state = indicate;
             break;
 
+        case BSP_INDICATE_USER_STATE_OFF:
+            LEDS_OFF(BSP_LED_0_MASK);
+            m_stable_state = indicate;
+            break;
 
         case BSP_INDICATE_SENT_OK:
         case BSP_INDICATE_SEND_ERROR:
         case BSP_INDICATE_RCV_OK:
         case BSP_INDICATE_RCV_ERROR:
         case BSP_INDICATE_FATAL_ERROR:
-        case BSP_INDICATE_ADVERTISING_WHITELIST:
-        case BSP_INDICATE_ADVERTISING_SLOW:
-        case BSP_INDICATE_ADVERTISING_DIRECTED:
-        case BSP_INDICATE_BONDING:
-        case BSP_INDICATE_USER_STATE_0:
-        case BSP_INDICATE_USER_STATE_1:
-        case BSP_INDICATE_USER_STATE_2:
-        case BSP_INDICATE_USER_STATE_3:
-        case BSP_INDICATE_USER_STATE_ON:
             break;
 
         default:
@@ -206,6 +194,9 @@ static uint32_t bsp_led_indication(bsp_indication_t indicate)
     return err_code;
 }
 
+/*---------------------------------------------------------------------------*/
+/*                                                                           */
+/*---------------------------------------------------------------------------*/
 static void leds_timer_handler(void * p_context)
 {
     if (m_indication_type & BSP_INIT_LED) {
@@ -213,12 +204,9 @@ static void leds_timer_handler(void * p_context)
     }
 }
 
-static void alert_timer_handler(void * p_context)
-{
-    LEDS_INVERT(ALERT_LED_MASK);
-}
-
-
+/*---------------------------------------------------------------------------*/
+/*                                                                           */
+/*---------------------------------------------------------------------------*/
 uint32_t bsp_indication_set(bsp_indication_t indicate)
 {
     uint32_t err_code = NRF_SUCCESS;
@@ -230,14 +218,19 @@ uint32_t bsp_indication_set(bsp_indication_t indicate)
     return err_code;
 }
 
-
+/*---------------------------------------------------------------------------*/
+/*                                                                           */
+/*---------------------------------------------------------------------------*/
 uint32_t bsp_indication_text_set(bsp_indication_t indicate, char const * p_text)
 {
     return bsp_indication_set(indicate);
 }
 
-
-uint32_t bsp_init(uint32_t type, uint32_t ticks_per_100ms, bsp_event_callback_t callback)
+/*---------------------------------------------------------------------------*/
+/*                                                                           */
+/*---------------------------------------------------------------------------*/
+uint32_t bsp_init(uint32_t type, uint32_t ticks_per_100ms, 
+                  bsp_event_callback_t callback)
 {
     uint32_t err_code = NRF_SUCCESS;
 
@@ -247,10 +240,15 @@ uint32_t bsp_init(uint32_t type, uint32_t ticks_per_100ms, bsp_event_callback_t 
     m_registered_callback = callback;
 
     if (type & BSP_INIT_BUTTON) {
-        uint32_t cnt;
+        uint32_t button_id;
 
-        for (cnt = 0; ((cnt < BUTTONS_NUMBER) && (err_code == NRF_SUCCESS)); cnt++) {
-            err_code = bsp_event_to_button_assign(cnt, (bsp_event_t)(BSP_EVENT_KEY_0 + cnt) );
+        for (button_id = 0; (button_id < BUTTONS_NUMBER); button_id++) {
+            bsp_event_t event_id;
+
+            event_id = (bsp_event_t)(BSP_EVENT_KEY_0 + button_id);
+
+            err_code = bsp_event_to_button_assign( button_id, event_id );
+            if (err_code != NRF_SUCCESS) return err_code;
         }
 
         APP_BUTTON_INIT((app_button_cfg_t *)app_buttons, 
@@ -258,9 +256,7 @@ uint32_t bsp_init(uint32_t type, uint32_t ticks_per_100ms, bsp_event_callback_t 
                          ticks_per_100ms / 2,
                          false);
 
-        if (err_code == NRF_SUCCESS) {
-            err_code = app_button_enable();
-        }
+        err_code = app_button_enable();
     }
 
     if (type & BSP_INIT_LED) {
@@ -275,15 +271,12 @@ uint32_t bsp_init(uint32_t type, uint32_t ticks_per_100ms, bsp_event_callback_t 
                                     leds_timer_handler);
     }
 
-    if (err_code == NRF_SUCCESS) {
-        err_code = app_timer_create(&m_alert_timer_id,
-                                    APP_TIMER_MODE_REPEATED,
-                                    alert_timer_handler);
-    }
-
     return err_code;
 }
 
+/*---------------------------------------------------------------------------*/
+/*                                                                           */
+/*---------------------------------------------------------------------------*/
 uint32_t bsp_event_to_button_assign(uint32_t button, bsp_event_t event)
 {
     uint32_t err_code = NRF_SUCCESS;
@@ -298,6 +291,9 @@ uint32_t bsp_event_to_button_assign(uint32_t button, bsp_event_t event)
     return err_code;
 }
 
+/*---------------------------------------------------------------------------*/
+/*                                                                           */
+/*---------------------------------------------------------------------------*/
 uint32_t bsp_buttons_enable(uint32_t buttons)
 {
     uint32_t button_no;
@@ -318,5 +314,3 @@ uint32_t bsp_buttons_enable(uint32_t buttons)
 
     return NRF_SUCCESS;
 }
-
-

@@ -1,4 +1,5 @@
 /*---------------------------------------------------------------------------*/
+/*  main.c                                                                   */
 /*  Copyright (c) 2015 Robin Callender. All Rights Reserved.                 */
 /*---------------------------------------------------------------------------*/
 #include <stdbool.h>
@@ -20,7 +21,6 @@
 #include "eddystone.h"
 #include "uart.h"
 #include "dbglog.h"
-
 
 /*---------------------------------------------------------------------------*/
 /*                                                                           */
@@ -103,9 +103,19 @@ void assert_nrf_callback(uint16_t line_num, const uint8_t *p_file_name)
 /*---------------------------------------------------------------------------*/
 static void bsp_events(bsp_event_t event)
 {
-    PUTS(__func__);
-}
+    static bool led_on = false;
 
+    PRINTF("bsp_event: %d\n", (int) event);
+
+    if (led_on) {
+        led_on = false;
+        bsp_indication_set(BSP_INDICATE_USER_STATE_OFF);
+    }
+    else {
+        led_on = true;
+        bsp_indication_set(BSP_INDICATE_USER_STATE_ON);
+    }
+}
 
 //*---------------------------------------------------------------------------*/
 /*  Function for initializing the BLE stack.                                 */
