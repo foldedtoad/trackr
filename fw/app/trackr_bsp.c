@@ -246,7 +246,7 @@ uint32_t bsp_init(uint32_t type, uint32_t ticks_per_100ms, bsp_event_callback_t 
 
     m_registered_callback = callback;
 
-    if (type & BSP_INIT_BUTTONS) {
+    if (type & BSP_INIT_BUTTON) {
         uint32_t cnt;
 
         for (cnt = 0; ((cnt < BUTTONS_NUMBER) && (err_code == NRF_SUCCESS)); cnt++) {

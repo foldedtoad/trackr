@@ -22,7 +22,7 @@
 
 #define BSP_INIT_NONE    0
 #define BSP_INIT_LED     (1 << 0)
-#define BSP_INIT_BUTTONS (1 << 1)
+#define BSP_INIT_BUTTON  (1 << 1)
 
 typedef enum {
     BSP_INDICATE_FIRST = 0,

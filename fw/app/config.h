@@ -24,6 +24,12 @@
  */
  #define DEVICE_NAME                    "Eddy"
 
+/* 
+ *  Maximum number of users of the GPIOTE handler.
+ */
+#define APP_GPIOTE_MAX_USERS            2
+
+
 /*
  *  GAP parameters
  */

@@ -10,6 +10,7 @@
 #include "softdevice_handler.h"
 #include "ble_advdata.h"
 #include "app_timer.h"
+#include "app_gpiote.h"
 #include "app_error.h"
 #include "app_scheduler.h"
 
@@ -97,6 +98,15 @@ void assert_nrf_callback(uint16_t line_num, const uint8_t *p_file_name)
     app_error_handler(DEAD_BEEF, line_num, p_file_name);
 }
 
+/*---------------------------------------------------------------------------*/
+/*                                                                           */
+/*---------------------------------------------------------------------------*/
+static void bsp_events(bsp_event_t event)
+{
+    PUTS(__func__);
+}
+
+
 //*---------------------------------------------------------------------------*/
 /*  Function for initializing the BLE stack.                                 */
 /*---------------------------------------------------------------------------*/
@@ -130,16 +140,30 @@ static void ble_stack_init(void)
 /*---------------------------------------------------------------------------*/
 static void timer_init(void)
 {
-    uint32_t err_code;
-
     APP_TIMER_INIT(APP_TIMER_PRESCALER,
                    APP_TIMER_MAX_TIMERS,
                    APP_TIMER_OP_QUEUE_SIZE,
                    false);
+}
 
-    err_code = bsp_init(BSP_INIT_LED,
+/*---------------------------------------------------------------------------*/
+/*                                                                           */
+/*---------------------------------------------------------------------------*/
+static void gpiote_init(void)
+{
+    APP_GPIOTE_INIT(APP_GPIOTE_MAX_USERS);
+}
+
+/*---------------------------------------------------------------------------*/
+/*                                                                           */
+/*---------------------------------------------------------------------------*/
+static void button_and_led_init(void)
+{
+    uint32_t err_code;
+
+    err_code = bsp_init((BSP_INIT_LED | BSP_INIT_BUTTON),
                         APP_TIMER_TICKS(100, APP_TIMER_PRESCALER),
-                        NULL);
+                        bsp_events);
     APP_ERROR_CHECK(err_code);
 }
 
@@ -188,6 +212,8 @@ int main(void)
 
     storage_init();
     timer_init();
+    gpiote_init();
+    button_and_led_init();
     radio_init();
 
     gap_params_init();
