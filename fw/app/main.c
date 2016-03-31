@@ -16,11 +16,18 @@
 #include "app_scheduler.h"
 
 #include "config.h"
+#include "buzzer.h"
+#include "tones.h"
 #include "advert.h"
 #include "connect.h"
 #include "eddystone.h"
 #include "uart.h"
 #include "dbglog.h"
+
+#ifdef BUZZER_SUPPORT
+  #include "buzzer.h"
+  #include "tones.h"
+#endif
 
 /*---------------------------------------------------------------------------*/
 /*                                                                           */
@@ -233,6 +240,16 @@ int main(void)
     sec_params_init();
 
     advertising_start_connectable();
+
+#ifdef BUZZER_SUPPORT
+    /* 
+     *  Note: Buzzer doesn't start playing until app_sched_execute() runs.
+     *        The playlist is just put on the execute list at this point.
+     *        Again, it will be executed from within the for() loop below.
+     */
+    buzzer_init();
+    buzzer_play((buzzer_play_t *)&startup_sound);
+#endif
 
     /* Enter main loop. */
     for (;;) {
