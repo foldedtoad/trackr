@@ -8,7 +8,9 @@
 #include "config.h"
 
 #include "nrf.h"
+#include "nrf_soc.h"
 #include "nrf_gpio.h"
+#include "nrf_gpiote.h"
 #include "nrf_delay.h"
 #include "app_timer.h"
 
@@ -19,49 +21,87 @@
 /*                                                                           */
 /*---------------------------------------------------------------------------*/
 
-#define BUZZ1   TRACKR_BUZZER_R
-#define BUZZ2   TRACKR_BUZZER_L
+#define BUZZ1                     TRACKR_BUZZER_R
+#define BUZZ2                     TRACKR_BUZZER_L
+
+#define BUZZ_TIMER                NRF_TIMER2
+
+#define GPIOTE_CHANNEL_NUMBER_0   0
+#define GPIOTE_CHANNEL_NUMBER_1   1
 
 #define TIMER_DELAY_ONE_MS APP_TIMER_TICKS( 1, APP_TIMER_PRESCALER )
 
-static app_timer_id_t   m_buzzer_timer_id;
-
-static volatile bool    m_playing = false;
-static uint32_t         m_freq = 150;
-
 /*---------------------------------------------------------------------------*/
 /*                                                                           */
 /*---------------------------------------------------------------------------*/
-void buzzer_play_element(void)
+
+static app_timer_id_t   m_buzzer_timer_id;
+
+/*---------------------------------------------------------------------------*/
+/* Configure a GPIO to toggle on a GPIOTE task.                              */
+/*---------------------------------------------------------------------------*/
+static void buzzer_gpiote_init(void)
 {
-    bool toggle = false;
+    /*
+     * Configure GPIOTE_CHANNEL_NUMBERs to toggle the GPIO pins state.
+     * NOTE: Only one GPIOTE task can be coupled to any output pin.
+     */
+    nrf_gpiote_task_config(GPIOTE_CHANNEL_NUMBER_0,
+                           BUZZ1,
+                           NRF_GPIOTE_POLARITY_TOGGLE,
+                           NRF_GPIOTE_INITIAL_VALUE_LOW);
 
-    while (m_playing) {
-        if (toggle) {
-            toggle = false;
-            nrf_gpio_pin_set(BUZZ2);
-            nrf_gpio_pin_clear(BUZZ1);
-        }
-        else {
-            toggle = true;
-            nrf_gpio_pin_set(BUZZ1);
-            nrf_gpio_pin_clear(BUZZ2);
-        }
-        nrf_delay_us(m_freq); 
-    }
-
-    nrf_gpio_pin_clear(BUZZ1);
-    nrf_gpio_pin_clear(BUZZ2);
+    nrf_gpiote_task_config(GPIOTE_CHANNEL_NUMBER_1,
+                           BUZZ2,
+                           NRF_GPIOTE_POLARITY_TOGGLE,
+                           NRF_GPIOTE_INITIAL_VALUE_HIGH);
 }
 
 /*---------------------------------------------------------------------------*/
-/*                                                                           */
+/* Use BUZZ_TIMER to generate events every 300 µs.                           */
 /*---------------------------------------------------------------------------*/
-static void buzzer_play_execute(void * p_event_data, uint16_t event_size)
+static void buzzer_timer_init(void)
 {
-    m_playing = true;
+    /* Start 16 MHz crystal oscillator. */
+    NRF_CLOCK->EVENTS_HFCLKSTARTED = 0;
+    NRF_CLOCK->TASKS_HFCLKSTART    = 1;
 
-    buzzer_play_element();
+    /* Wait for the external oscillator to start. */
+    while (NRF_CLOCK->EVENTS_HFCLKSTARTED == 0) { /* spin */ }
+
+    /* Clear TIMER0 */
+    BUZZ_TIMER->TASKS_CLEAR = 1;
+
+    /*
+     * Configure TIMER0 for compare[0] event every 125µs.
+     */
+    BUZZ_TIMER->PRESCALER = 2;
+    BUZZ_TIMER->CC[0]     = 500;
+    BUZZ_TIMER->MODE      = TIMER_MODE_MODE_Timer;
+    BUZZ_TIMER->BITMODE   = TIMER_BITMODE_BITMODE_24Bit;
+    BUZZ_TIMER->SHORTS    = (TIMER_SHORTS_COMPARE0_CLEAR_Enabled << TIMER_SHORTS_COMPARE0_CLEAR_Pos);
+}
+
+/*---------------------------------------------------------------------------*/
+/*  Use a PPI channel to connect the event to the task automatically.        */
+/*---------------------------------------------------------------------------*/ 
+static void buzzer_ppi_init(void)
+{
+    /*  
+     *  Configure PPI channel 0 to toggle GPIO_OUTPUT_PIN on 
+     *  every TIMER0 COMPARE[0] match (300µs)
+     */
+    sd_ppi_channel_assign(GPIOTE_CHANNEL_NUMBER_0,
+                          &BUZZ_TIMER->EVENTS_COMPARE[0],
+                          &NRF_GPIOTE->TASKS_OUT[GPIOTE_CHANNEL_NUMBER_0]);
+
+    sd_ppi_channel_assign(GPIOTE_CHANNEL_NUMBER_1, 
+                          &BUZZ_TIMER->EVENTS_COMPARE[0], 
+                          &NRF_GPIOTE->TASKS_OUT[GPIOTE_CHANNEL_NUMBER_1]);
+
+    /* Enable PPI channels */
+    sd_ppi_channel_enable_set((PPI_CHEN_CH0_Enabled << PPI_CHEN_CH0_Pos) |
+                              (PPI_CHEN_CH1_Enabled << PPI_CHEN_CH1_Pos));
 }
 
 /*---------------------------------------------------------------------------*/
@@ -73,23 +113,32 @@ static void buzzer_process_playlist(buzzer_play_t * playlist)
     switch (playlist->action) {
 
         case BUZZER_PLAY_TONE:
+
+            BUZZ_TIMER->TASKS_STOP = 1;
+
+            buzzer_gpiote_init();
+            buzzer_timer_init();
+            buzzer_ppi_init();
+
+            BUZZ_TIMER->TASKS_START = 1;
+
             app_timer_start(m_buzzer_timer_id,
                             (playlist->duration * TIMER_DELAY_ONE_MS),
                             &playlist[1]);
-
-            app_sched_event_put(NULL, 0, buzzer_play_execute);
             break;
 
         case BUZZER_PLAY_QUIET:
-            m_playing = false;
-            app_timer_start(m_buzzer_timer_id, 
-                            (playlist->duration * TIMER_DELAY_ONE_MS), 
+
+            BUZZ_TIMER->TASKS_STOP = 1;
+
+            app_timer_start(m_buzzer_timer_id,
+                            (playlist->duration * TIMER_DELAY_ONE_MS),
                             &playlist[1]);
             break;
 
         case BUZZER_PLAY_DONE:
         default:
-            m_playing = false;
+            BUZZ_TIMER->TASKS_STOP = 1;
             break;
     }
 }
@@ -109,8 +158,6 @@ static void buzzer_timeout_handler(void * context)
 /*---------------------------------------------------------------------------*/
 uint32_t buzzer_play(buzzer_play_t * playlist)
 {
-    PUTS(__func__);
-
     buzzer_process_playlist(playlist);
 
     return NRF_SUCCESS;
@@ -121,11 +168,9 @@ uint32_t buzzer_play(buzzer_play_t * playlist)
 /*---------------------------------------------------------------------------*/
 void buzzer_stop(void)
 {
-    PUTS(__func__);
-
-    m_playing = false;
-
     app_timer_stop(m_buzzer_timer_id);
+
+    BUZZ_TIMER->TASKS_STOP = 1;
 }
 
 /*---------------------------------------------------------------------------*/
@@ -138,7 +183,9 @@ void buzzer_init(void)
     err_code = app_timer_create(&m_buzzer_timer_id,
                                 APP_TIMER_MODE_SINGLE_SHOT,
                                 buzzer_timeout_handler);
-    APP_ERROR_CHECK(err_code); 
+    APP_ERROR_CHECK(err_code);
+
+    *(uint32_t *)0x40008C0C = 1;  // PAN-73 workaround
 
     nrf_gpio_cfg_output(BUZZ1);
     nrf_gpio_cfg_output(BUZZ2);
@@ -146,4 +193,3 @@ void buzzer_init(void)
     nrf_gpio_pin_clear(BUZZ1);
     nrf_gpio_pin_clear(BUZZ2);
 }
-

@@ -29,7 +29,6 @@
  */
 #define APP_GPIOTE_MAX_USERS            2
 
-
 /*
  *  GAP parameters
  */

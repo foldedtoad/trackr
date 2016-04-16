@@ -137,7 +137,7 @@ static void ble_stack_init(void)
 
     /* Enable BLE stack */ 
     memset(&ble_enable_params, 0, sizeof(ble_enable_params));
-    
+
     ble_enable_params.gatts_enable_params.service_changed = IS_SRVC_CHANGED_CHARACT_PRESENT;
 
     APP_ERROR_CHECK( sd_ble_enable(&ble_enable_params) );
@@ -206,6 +206,14 @@ static void scheduler_init(void)
 }
 
 /*---------------------------------------------------------------------------*/
+/*                                                                           */
+/*---------------------------------------------------------------------------*/
+static void buzzer_event_execute(void * p_event_data, uint16_t event_size)
+{
+    buzzer_play((buzzer_play_t *)&startup_sound);
+}
+
+/*---------------------------------------------------------------------------*/
 /*  Function for doing power management.                                     */
 /*---------------------------------------------------------------------------*/
 static void power_manage(void)
@@ -248,7 +256,7 @@ int main(void)
      *        Again, it will be executed from within the for() loop below.
      */
     buzzer_init();
-    buzzer_play((buzzer_play_t *)&startup_sound);
+    app_sched_event_put(NULL, 0, buzzer_event_execute);
 #endif
 
     /* Enter main loop. */
