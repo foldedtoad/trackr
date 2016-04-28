@@ -110,18 +110,14 @@ void assert_nrf_callback(uint16_t line_num, const uint8_t *p_file_name)
 /*---------------------------------------------------------------------------*/
 static void bsp_events(bsp_event_t event)
 {
-    static bool led_on = false;
+    /* Button press means restart to allow URL update. */
+    if (event == BSP_EVENT_KEY_0) {
+
+        NVIC_SystemReset();
+        return;
+    }
 
     PRINTF("bsp_event: %d\n", (int) event);
-
-    if (led_on) {
-        led_on = false;
-        bsp_indication_set(BSP_INDICATE_USER_STATE_OFF);
-    }
-    else {
-        led_on = true;
-        bsp_indication_set(BSP_INDICATE_USER_STATE_ON);
-    }
 }
 
 //*---------------------------------------------------------------------------*/
