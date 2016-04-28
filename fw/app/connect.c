@@ -21,6 +21,7 @@
 #include "advert.h"
 #include "connect.h"
 #include "pstorage_platform.h"
+#include "tones.h"
 #include "dbglog.h"
 
 /*---------------------------------------------------------------------------*/
@@ -156,6 +157,10 @@ static void on_ble_evt(ble_evt_t * p_ble_evt)
 
                 /* Set to Non-Connect Advertising mode */
                 advertising_start_nonconnectable();
+
+                #ifdef BUZZER_SUPPORT
+                buzzer_play((buzzer_play_t *)&one_beep_sound);
+                #endif
             }
             break;
 
