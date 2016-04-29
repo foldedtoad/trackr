@@ -4,7 +4,14 @@
 
 TARGET_BOARD   := trackr
 
+BUZZER_SUPPORT := "yes"
 DBGLOG_SUPPORT := "no"
+
+ifeq ($(DBGLOG_SUPPORT), "yes") 
+ifeq ($(BUZZER_SUPPORT), "yes")
+$(error DBGLOG and BUZZER are mutually exclusive options)
+endif
+endif
 
 #------------------------------------------------------------------------------
 # Define relative paths to SDK components
@@ -73,6 +80,12 @@ ifeq ($(DBGLOG_SUPPORT), "yes")
 	CFLAGS += -D DBGLOG_SUPPORT=1
 	C_SOURCE_FILES += ../uart.c
 	C_SOURCE_FILES += ../dump.c
+endif
+
+ifeq ($(BUZZER_SUPPORT), "yes")
+	CFLAGS += -D BUZZER_SUPPORT=1
+	C_SOURCE_FILES += ../buzzer.c
+	C_SOURCE_FILES += ../tones.c
 endif
 
 C_SOURCE_FILES += $(COMPONENTS)/libraries/button/app_button.c
@@ -197,6 +210,7 @@ all: $(BUILD_DIRECTORIES) $(OBJECTS)
 	@echo "build with:    $(TOOLCHAIN_BASE)"
 	@echo "build target:  $(TARGET_BOARD)"
 	@echo "build options  --"
+	@echo "               BUZZER_SUPPORT     $(BUZZER_SUPPORT)"
 	@echo "               DBGLOG_SUPPORT     $(DBGLOG_SUPPORT)"
 	@echo "build products --"
 	@echo "               $(OUTPUT_NAME).elf"

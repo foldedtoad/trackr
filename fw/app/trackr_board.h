@@ -11,23 +11,24 @@
 /*                                                                           */
 /*---------------------------------------------------------------------------*/
 
-#define TRACKR_RX              P0_10
 #define TRACKR_BUTTON          P0_17
 #define TRACKR_LED             P0_19
-#define TRACKR_TX              P0_23
-
-
-/* NOTE: Subverting the buzzer GPIOs to be UART GPIOs */
-
-//#define TRACKR_BUZZER_R        P0_10
-//#define TRACKR_BUZZER_L        P0_23
 
 /*---------------------------------------------------------------------------*/
-/*                                                                           */
+/*  The UART and Buzzer use the same GPIO pins, so mutually exclusive.       */
 /*---------------------------------------------------------------------------*/
 
-#define TX_PIN_NUMBER       TRACKR_TX
-#define RX_PIN_NUMBER       TRACKR_RX
+#ifdef DBGLOG_SUPPORT
+  #define TRACKR_RX            P0_10
+  #define TRACKR_TX            P0_23
+  #define TX_PIN_NUMBER        TRACKR_TX
+  #define RX_PIN_NUMBER        TRACKR_RX
+#endif
+
+#ifdef BUZZER_SUPPORT
+  #define TRACKR_BUZZER_R      P0_10
+  #define TRACKR_BUZZER_L      P0_23
+#endif
 
 /*---------------------------------------------------------------------------*/
 /*                                                                           */

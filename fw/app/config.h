@@ -29,7 +29,6 @@
  */
 #define APP_GPIOTE_MAX_USERS            2
 
-
 /*
  *  GAP parameters
  */
@@ -119,7 +118,7 @@
  *  Go to https://goo.gl for utility to shortening URL names.
  */
 #define URL_MAX_LENGTH                  17
-#define URL_DEFAULT_STRING              "goo.gl/CDgVgI"
+#define URL_DEFAULT_STRING              "goo.gl/jjurOU"
 #define URL_LENGTH                      (sizeof(URL_STRING) - 1)
 
 /*

@@ -16,11 +16,18 @@
 #include "app_scheduler.h"
 
 #include "config.h"
+#include "buzzer.h"
+#include "tones.h"
 #include "advert.h"
 #include "connect.h"
 #include "eddystone.h"
 #include "uart.h"
 #include "dbglog.h"
+
+#ifdef BUZZER_SUPPORT
+  #include "buzzer.h"
+  #include "tones.h"
+#endif
 
 /*---------------------------------------------------------------------------*/
 /*                                                                           */
@@ -103,18 +110,14 @@ void assert_nrf_callback(uint16_t line_num, const uint8_t *p_file_name)
 /*---------------------------------------------------------------------------*/
 static void bsp_events(bsp_event_t event)
 {
-    static bool led_on = false;
+    /* Button press means restart to allow URL update. */
+    if (event == BSP_EVENT_KEY_0) {
+
+        NVIC_SystemReset();
+        return;
+    }
 
     PRINTF("bsp_event: %d\n", (int) event);
-
-    if (led_on) {
-        led_on = false;
-        bsp_indication_set(BSP_INDICATE_USER_STATE_OFF);
-    }
-    else {
-        led_on = true;
-        bsp_indication_set(BSP_INDICATE_USER_STATE_ON);
-    }
 }
 
 //*---------------------------------------------------------------------------*/
@@ -130,7 +133,7 @@ static void ble_stack_init(void)
 
     /* Enable BLE stack */ 
     memset(&ble_enable_params, 0, sizeof(ble_enable_params));
-    
+
     ble_enable_params.gatts_enable_params.service_changed = IS_SRVC_CHANGED_CHARACT_PRESENT;
 
     APP_ERROR_CHECK( sd_ble_enable(&ble_enable_params) );
@@ -233,6 +236,11 @@ int main(void)
     sec_params_init();
 
     advertising_start_connectable();
+
+#ifdef BUZZER_SUPPORT
+    buzzer_init();
+    buzzer_play((buzzer_play_t *)&startup_sound);
+#endif
 
     /* Enter main loop. */
     for (;;) {
